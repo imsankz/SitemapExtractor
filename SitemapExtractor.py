@@ -75,7 +75,9 @@ def render_header():
 def render_footer():
     st.markdown("""
     <div style='text-align: center; padding: 2rem 0; color: #4a4a4a; border-top: 1px solid #e5e5e5; margin-top: 2rem;'>
-        <p>© 2025 Sitemap Explorer. Made with ❤️ using Streamlit</p>
+        <p>© 2025 Sitemap Explorer. Made with ❤️ using Streamlit by 
+        <a href="https://chasingwhereabouts.com/" target="_blank" style="color: #0073e6; text-decoration: none;">Chasing Whereabouts</a>
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
