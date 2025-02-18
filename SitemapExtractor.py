@@ -1,15 +1,85 @@
 import streamlit as st
+import requests
+import xml.etree.ElementTree as ET
 import pandas as pd
-from components.header import render_header
-from components.footer import render_footer
-from sitemap_utils import (
-    validate_url,
-    fetch_sitemap,
-    parse_sitemap,
-    filter_urls_by_keyword,
-    create_dataframe
-)
+from typing import List, Optional
+from urllib.parse import urlparse
 
+# Utility Functions
+def validate_url(url: str) -> bool:
+    """Validate if the given URL is properly formatted."""
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except:
+        return False
+
+def fetch_sitemap(url: str) -> Optional[str]:
+    """Fetch sitemap content from URL with error handling."""
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException:
+        return None
+
+def parse_sitemap(xml_content: str) -> List[str]:
+    """Parse XML sitemap and extract URLs."""
+    urls = []
+    try:
+        root = ET.fromstring(xml_content)
+        namespaces = {'ns': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+        locations = root.findall('.//ns:loc', namespaces)
+        if locations:
+            urls = [loc.text for loc in locations if loc.text]
+    except ET.ParseError:
+        return []
+    return urls
+
+def filter_urls_by_keyword(urls: List[str], keyword: str) -> List[str]:
+    """Filter URLs based on keyword."""
+    if not keyword:
+        return urls
+    keyword = keyword.lower()
+    return [url for url in urls if keyword in url.lower()]
+
+def create_dataframe(urls: List[str]) -> pd.DataFrame:
+    """Create a DataFrame from URLs."""
+    return pd.DataFrame(urls, columns=['URL'])
+
+# Header Component
+def render_header():
+    st.markdown("""
+    <style>
+        .header {
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+            color: #0e1117;
+        }
+    </style>
+    <div class="header">
+        <h1 class="app-title">🔍 Sitemap Explorer</h1>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Footer Component
+def render_footer():
+    st.markdown("""
+    <div style='text-align: center; padding: 2rem 0; color: #4a4a4a; border-top: 1px solid #e5e5e5; margin-top: 2rem;'>
+        <p>© 2025 Sitemap Explorer. Made with ❤️ using Streamlit</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Main Application
 def main():
     # Page configuration
     st.set_page_config(
